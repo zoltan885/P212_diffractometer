@@ -1,10 +1,12 @@
-#!/home/hegedues/miniforge3/envs/pyfai/bin/python
+#!/home/p212user/miniforge3/envs/loadframe/bin/python
 # -*- coding: utf-8 -*-
 """
 Created on Tue Oct 24 09:45:55 2023
 
 @author: hegedues
 """
+
+VERSION = {'major': 0, 'minor': 1, 'patch': 0}
 
 import sys
 import os
@@ -88,7 +90,9 @@ mots = {'idtz2': 'p21/motor/eh3_u1.06',
 FASTTIMER = 0.1
 SLOWTIMER = 1
 
-PROGRESS = '|-'
+PROGRESS = '|/-\\'
+
+
 
 class myQLabel(QLabel):
     '''
@@ -226,9 +230,9 @@ class MainWidget(QtWidgets.QWidget):
         for t in threads:
             t.start()
         time.sleep(FASTTIMER)
-        #self.label.setText(int(PROGRESS[(time.time()-self.t0) % len(PROGRESS)]))
-        imgidx = int((time.time()-self.t0) % len(8))
-        self.label.setPixmap(QPixmap('./%d.png' % imgidx))
+        self.label.setText(PROGRESS[int((time.time()-self.t0) % len(PROGRESS))])
+        #imgidx = int((time.time()-self.t0) % 8)
+        #self.label.setPixmap(QPixmap('./progress/%d.png' % imgidx))
         for t in threads:
             t.join()
 
@@ -246,6 +250,7 @@ def exitHandler():
 
 
 def mainGUI():
+    print('Version: %d.%d.%d' % (VERSION['major'], VERSION['minor'], VERSION['patch']))
     app = QtWidgets.QApplication(sys.argv)
     app.aboutToQuit.connect(exitHandler)
     #app.setStyleSheet(Path('style.qss').read_text())
