@@ -85,6 +85,9 @@ mots = {'idtz2': 'p21/motor/eh3_u1.06',
         'idry1': 'p21/motor/eh3_u1.13'}
 
 
+FASTTIMER = 100
+SLOWTIMER = 1000
+
 
 class myQLabel(QLabel):
     '''
@@ -197,17 +200,15 @@ class MainWidget(QtWidgets.QWidget):
 
 
         self.timerSlow = QTimer()
-        self.timerSlow.start(1000)
+        self.timerSlow.start(SLOWTIMER)
         self.timerFast = QTimer()
-        self.timerFast.start(100)
+        self.timerFast.start(FASTTIMER)
 
         self.timerFast.timeout.connect(self.update_states_pos)
 
 
     def _upd(self, *args):
-        print(args)
         key = args[0]
-        print(key)
         position = self.mot[key]['DeviceProxy'].position
         self.mot[key]['value'].setText(f"{position:.4f}")
         state = str(self.mot[key]['DeviceProxy'].state())
@@ -218,11 +219,14 @@ class MainWidget(QtWidgets.QWidget):
     def update_states_pos(self):
         threads = []
         for i,k in enumerate(self.mot.keys()):
-            print(k)
             thread = Thread(target=self._upd, args=(k,))
             threads.append(thread)
         for t in threads:
             t.start()
+        time.sleep(FASTTIMER)
+        for t in threads:
+            t.join()
+
         #with Pool(len(self.mot.keys())) as p:
             #DPs = [self.mot[k]['DeviceProxy'] for k in self.mot.keys()]  # this is not picklable
             #labels = [self.mot[k]['value'] for k in self.mot.keys()]
