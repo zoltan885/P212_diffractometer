@@ -85,9 +85,10 @@ mots = {'idtz2': 'p21/motor/eh3_u1.06',
         'idry1': 'p21/motor/eh3_u1.13'}
 
 
-FASTTIMER = 100
-SLOWTIMER = 1000
+FASTTIMER = 0.1
+SLOWTIMER = 1
 
+PROGRESS = '|-'
 
 class myQLabel(QLabel):
     '''
@@ -145,6 +146,7 @@ class MainWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super(MainWidget, self).__init__(*args, **kwargs)
         uic.loadUi('diffractometerGUI.ui', self)
+        t0 = time.time()
 
         self.mot = {}
         font = self.frame.font()
@@ -163,7 +165,7 @@ class MainWidget(QtWidgets.QWidget):
             # position labels
             self.mot[k]['value'] = QLabel('position')
             self.mot[k]['value'].setStyleSheet('''QLabel {
-                                                        color: green;
+                                                        color: #0d6efd;
                                                         font-size: 30px;
                                                         font=weight: 600;
                                                         border-radius: 5px;
@@ -171,20 +173,20 @@ class MainWidget(QtWidgets.QWidget):
                                                         }''')
 
             self.mot[k]['state'] = QPushButton('state')
-            self.mot[k]['state'].setStyleSheet('QPushButton {\
-                                                            background-color: %s;\
-                                                            color: #fff;\
-                                                            font-weight: 600;\
-                                                            border-radius: 5px;\
-                                                            border: 1px solid #0d6efd;\
-                                                            padding: 5px 15px;\
-                                                            outline: 0px;\
-                                                            font-size: 30px;\
-                                                            }' %_TangoStateColors['UNKNOWN'])
+            self.mot[k]['state'].setStyleSheet('''QPushButton {
+                                                            color: #fff;
+                                                            font-weight: 600;
+                                                            border-radius: 5px;
+                                                            border: 1px solid #0d6efd;
+                                                            padding: 5px 15px;
+                                                            outline: 0px;
+                                                            font-size: 30px;
+                                                            }''')
+            self.mot[k]['state'].setStyleSheet("QPushButton {background-color: %s}" % _TangoStateColors['UNKNOWN'])
 
             grid.addWidget(self.mot[k]['label'], i, 0)
             grid.addWidget(self.mot[k]['value'], i, 1)
-            grid.addWidget(self.mot[k]['state'], i,2)
+            grid.addWidget(self.mot[k]['state'], i, 2)
             try:
                 self.mot[k]['DeviceProxy'] = PT.DeviceProxy('tango://hasep21eh3:10000/%s' % v)
                 logging.info(f"{k} connected")
@@ -200,9 +202,9 @@ class MainWidget(QtWidgets.QWidget):
 
 
         self.timerSlow = QTimer()
-        self.timerSlow.start(SLOWTIMER)
+        self.timerSlow.start(int(1000*SLOWTIMER))
         self.timerFast = QTimer()
-        self.timerFast.start(FASTTIMER)
+        self.timerFast.start(int(1000*FASTTIMER))
 
         self.timerFast.timeout.connect(self.update_states_pos)
 
@@ -218,12 +220,13 @@ class MainWidget(QtWidgets.QWidget):
 
     def update_states_pos(self):
         threads = []
-        for i,k in enumerate(self.mot.keys()):
+        for i, k in enumerate(self.mot.keys()):
             thread = Thread(target=self._upd, args=(k,))
             threads.append(thread)
         for t in threads:
             t.start()
         time.sleep(FASTTIMER)
+        self.label.setText(PROGRESS[(time.time()-self.t0) % len(PROGRESS)])
         for t in threads:
             t.join()
 
