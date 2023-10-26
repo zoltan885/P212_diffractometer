@@ -146,7 +146,7 @@ class MainWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super(MainWidget, self).__init__(*args, **kwargs)
         uic.loadUi('diffractometerGUI.ui', self)
-        t0 = time.time()
+        self.t0 = time.time()
 
         self.mot = {}
         font = self.frame.font()
@@ -226,7 +226,9 @@ class MainWidget(QtWidgets.QWidget):
         for t in threads:
             t.start()
         time.sleep(FASTTIMER)
-        self.label.setText(PROGRESS[(time.time()-self.t0) % len(PROGRESS)])
+        #self.label.setText(int(PROGRESS[(time.time()-self.t0) % len(PROGRESS)]))
+        imgidx = int((time.time()-self.t0) % len(8))
+        self.label.setPixmap(QPixmap('./%d.png' % imgidx))
         for t in threads:
             t.join()
 
